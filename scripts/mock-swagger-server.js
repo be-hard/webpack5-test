@@ -2,6 +2,29 @@ const http = require("node:http");
 
 const port = Number(process.env.MOCK_SWAGGER_PORT || 5050);
 
+function readJsonBody(request) {
+  return new Promise((resolve, reject) => {
+    let rawBody = "";
+
+    request.on("data", (chunk) => {
+      rawBody += chunk;
+    });
+    request.on("end", () => {
+      try {
+        resolve(rawBody ? JSON.parse(rawBody) : {});
+      } catch (error) {
+        reject(error);
+      }
+    });
+    request.on("error", reject);
+  });
+}
+
+function sendJson(response, status, payload) {
+  response.writeHead(status, { "content-type": "application/json" });
+  response.end(JSON.stringify(payload));
+}
+
 function createOpenApiSpec() {
   return {
     openapi: "3.0.0",
@@ -37,6 +60,35 @@ function createOpenApiSpec() {
                 "application/json": {
                   schema: {
                     $ref: "#/components/schemas/LoginResponse",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      "/auth/refresh": {
+        post: {
+          tags: ["auth"],
+          operationId: "refreshToken",
+          summary: "Refresh access token",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/RefreshTokenParams",
+                },
+              },
+            },
+          },
+          responses: {
+            200: {
+              description: "Refresh token result",
+              content: {
+                "application/json": {
+                  schema: {
+                    $ref: "#/components/schemas/RefreshTokenResponse",
                   },
                 },
               },
@@ -143,6 +195,27 @@ function createOpenApiSpec() {
             },
           },
         },
+        RefreshTokenParams: {
+          type: "object",
+          required: ["refreshToken"],
+          properties: {
+            refreshToken: {
+              type: "string",
+            },
+          },
+        },
+        RefreshTokenResult: {
+          type: "object",
+          required: ["accessToken"],
+          properties: {
+            accessToken: {
+              type: "string",
+            },
+            refreshToken: {
+              type: "string",
+            },
+          },
+        },
         UserProfile: {
           type: "object",
           required: ["id", "name", "roles"],
@@ -174,6 +247,21 @@ function createOpenApiSpec() {
               properties: {
                 data: {
                   $ref: "#/components/schemas/LoginResult",
+                },
+              },
+            },
+          ],
+        },
+        RefreshTokenResponse: {
+          allOf: [
+            {
+              $ref: "#/components/schemas/ApiResponse",
+            },
+            {
+              type: "object",
+              properties: {
+                data: {
+                  $ref: "#/components/schemas/RefreshTokenResult",
                 },
               },
             },
@@ -261,7 +349,7 @@ function createOpenApiSpec() {
   };
 }
 
-const server = http.createServer((request, response) => {
+const server = http.createServer(async (request, response) => {
   if (request.url === "/swagger.json") {
     const featureTag = request.headers["feature-tag"];
     console.log(`GET /swagger.json feature-tag=${featureTag || "<empty>"}`);
@@ -271,22 +359,75 @@ const server = http.createServer((request, response) => {
     return;
   }
 
+  if (request.url === "/api/auth/login" && request.method === "POST") {
+    const featureTag = request.headers["feature-tag"];
+    const body = await readJsonBody(request);
+    console.log(`POST /api/auth/login feature-tag=${featureTag || "<empty>"}`);
+
+    if (body.username !== "admin" || body.password !== "123456") {
+      sendJson(response, 401, {
+        code: 401,
+        message: "Invalid username or password",
+      });
+      return;
+    }
+
+    sendJson(response, 200, {
+      code: 0,
+      message: "ok",
+      data: {
+        accessToken: "expired-access-token",
+        refreshToken: "valid-refresh-token",
+      },
+    });
+    return;
+  }
+
+  if (request.url === "/api/auth/refresh" && request.method === "POST") {
+    const featureTag = request.headers["feature-tag"];
+    const body = await readJsonBody(request);
+    console.log(`POST /api/auth/refresh feature-tag=${featureTag || "<empty>"}`);
+
+    if (body.refreshToken !== "valid-refresh-token") {
+      sendJson(response, 401, {
+        code: 401,
+        message: "Refresh token expired",
+      });
+      return;
+    }
+
+    sendJson(response, 200, {
+      code: 0,
+      message: "ok",
+      data: {
+        accessToken: "valid-access-token",
+        refreshToken: "valid-refresh-token",
+      },
+    });
+    return;
+  }
+
   if (request.url === "/api/auth/profile") {
     const featureTag = request.headers["feature-tag"];
     console.log(`GET /api/auth/profile feature-tag=${featureTag || "<empty>"}`);
 
-    response.writeHead(200, { "content-type": "application/json" });
-    response.end(
-      JSON.stringify({
-        code: 0,
-        message: "ok",
-        data: {
-          id: "1",
-          name: "Mock User",
-          roles: ["admin"],
-        },
-      }),
-    );
+    if (request.headers.authorization !== "Bearer valid-access-token") {
+      sendJson(response, 401, {
+        code: 401,
+        message: "Access token expired",
+      });
+      return;
+    }
+
+    sendJson(response, 200, {
+      code: 0,
+      message: "ok",
+      data: {
+        id: "1",
+        name: "Mock User",
+        roles: ["admin"],
+      },
+    });
     return;
   }
 

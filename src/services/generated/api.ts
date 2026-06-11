@@ -9,6 +9,8 @@ import type {
   LoginParams,
   LoginResponse,
   OrderListResponse,
+  RefreshTokenParams,
+  RefreshTokenResponse,
   UserProfileResponse,
 } from "./model";
 
@@ -36,6 +38,24 @@ export const getBackendService = () => {
   };
 
   /**
+   * @summary Refresh access token
+   */
+  const refreshToken = (
+    refreshTokenParams: BodyType<RefreshTokenParams>,
+    options?: SecondParameter<typeof customInstance<RefreshTokenResponse>>,
+  ) => {
+    return customInstance<RefreshTokenResponse>(
+      {
+        url: `/auth/refresh`,
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        data: refreshTokenParams,
+      },
+      options,
+    );
+  };
+
+  /**
    * @summary Get current user profile
    */
   const getProfile = (options?: SecondParameter<typeof customInstance<UserProfileResponse>>) => {
@@ -56,10 +76,13 @@ export const getBackendService = () => {
     );
   };
 
-  return { login, getProfile, getUserOrders };
+  return { login, refreshToken, getProfile, getUserOrders };
 };
 export type LoginResult = NonNullable<
   Awaited<ReturnType<ReturnType<typeof getBackendService>["login"]>>
+>;
+export type RefreshTokenResult = NonNullable<
+  Awaited<ReturnType<ReturnType<typeof getBackendService>["refreshToken"]>>
 >;
 export type GetProfileResult = NonNullable<
   Awaited<ReturnType<ReturnType<typeof getBackendService>["getProfile"]>>

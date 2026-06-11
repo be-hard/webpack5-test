@@ -1,9 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { apiClient } from "@services";
+import { clearAuthTokens } from "@services/auth/token";
 import { GetUserOrdersStatus } from "@services/generated/model";
 import type { OrderListResponse, UserProfileResponse } from "@services/generated/model";
 
 export default function Home() {
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfileResponse["data"]>();
   const [orders, setOrders] = useState<OrderListResponse["data"]>();
   const [error, setError] = useState<string>();
@@ -30,9 +33,17 @@ export default function Home() {
     }
   };
 
+  const logout = () => {
+    clearAuthTokens();
+    navigate("/login");
+  };
+
   return (
     <div>
       <h1>Home</h1>
+      <button type="button" onClick={logout}>
+        Logout
+      </button>
       <button type="button" onClick={loadProfile} disabled={loading}>
         {loading ? "Loading..." : "Load profile"}
       </button>
