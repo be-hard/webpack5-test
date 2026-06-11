@@ -1,0 +1,80 @@
+{
+  "name": "webpack5-learn",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "webpack serve --config config/webpack/webpack.development.js --mode development",
+    "build": "webpack --config config/webpack/webpack.production.js --mode production",
+    "api:download": "node scripts/download-openapi.js --mode=development",
+    "api:download:test": "node scripts/download-openapi.js --mode=test",
+    "api:download:production": "node scripts/download-openapi.js --mode=production",
+    "api:format": "prettier \"src/services/generated/**/*.{ts,tsx}\" --write --ignore-path /dev/null",
+    "api:generate": "pnpm run api:download && orval --config orval.config.js --formatter prettier && pnpm run api:format",
+    "api:generate:test": "pnpm run api:download:test && orval --config orval.config.js --formatter prettier && pnpm run api:format",
+    "api:generate:production": "pnpm run api:download:production && orval --config orval.config.js --formatter prettier && pnpm run api:format",
+    "mock:swagger": "node scripts/mock-swagger-server.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier . --check",
+    "format:write": "prettier . --write",
+    "prepare": "husky",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "browserslist": [
+    "> 0.5%",
+    "last 2 versions",
+    "not dead"
+  ],
+  "lint-staged": {
+    "*.{js,cjs,mjs,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,css,scss,md,html,yml,yaml}": "prettier --write"
+  },
+  "devDependencies": {
+    "@swc/core": "^1.15.40",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "autoprefixer": "^10.5.0",
+    "css-loader": "^7.1.4",
+    "css-minimizer-webpack-plugin": "^8.0.0",
+    "dotenv": "^17.4.2",
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "fork-ts-checker-webpack-plugin": "^9.1.0",
+    "globals": "^17.6.0",
+    "html-webpack-plugin": "^5.6.7",
+    "husky": "^9.1.7",
+    "image-minimizer-webpack-plugin": "^5.0.0",
+    "lint-staged": "^17.0.7",
+    "mini-css-extract-plugin": "^2.10.2",
+    "orval": "^8.16.0",
+    "postcss": "^8.5.15",
+    "postcss-loader": "^8.2.1",
+    "prettier": "^3.8.4",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-router-dom": "^7.17.0",
+    "sass": "^1.100.0",
+    "sass-loader": "^17.0.0",
+    "style-loader": "^4.0.0",
+    "swc-loader": "^0.2.7",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.61.0",
+    "webpack": "^5.107.2",
+    "webpack-cli": "^7.0.3",
+    "webpack-dev-server": "^5.2.4",
+    "webpack-merge": "^6.0.1"
+  },
+  "dependencies": {
+    "axios": "^1.17.0"
+  }
+}

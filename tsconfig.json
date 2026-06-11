@@ -1,0 +1,58 @@
+{
+  "compilerOptions": {
+    // 编译目标 JS 版本。
+    // ES2020 对现代浏览器比较友好，语法不会被降级得太狠。
+    "target": "ES2020",
+
+    // 模块格式。
+    // Webpack 会接管模块打包，所以这里保留 ESNext，利于 tree-shaking。
+    "module": "ESNext",
+
+    // React JSX 编译模式。
+    // react-jsx 是 React 17+ 的新 JSX runtime，不需要每个文件手动 import React。
+    "jsx": "react-jsx",
+
+    // 开启严格类型检查。
+    // 大型项目建议必须开启。
+    "strict": true,
+
+    // 模块解析策略。
+    // Bundler 更贴近 Webpack/Vite/Rspack 这类现代打包器的解析行为。
+    "moduleResolution": "Bundler",
+
+    // 路径别名的基础目录。
+    // 配合下面的 paths 使用。
+    "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
+
+    // TypeScript 路径别名。
+    // 注意：这里也要和 Webpack resolve.alias 保持一致。
+    "paths": {
+      "@/*": ["src/*"],
+      "@app/*": ["src/app/*"],
+      "@shared/*": ["src/shared/*"],
+      "@features/*": ["src/features/*"],
+      "@services": ["src/services/index.ts"],
+      "@services/*": ["src/services/*"],
+      "@pages/*": ["src/pages/*"]
+    },
+
+    // 不让 TypeScript 输出 JS 文件。
+    // 因为实际转译和打包由 Webpack + swc-loader 负责。
+    "noEmit": true,
+
+    // 每个文件按独立模块处理。
+    // 配合 SWC/Babel/esbuild 这类只做单文件转译的工具更安全。
+    "isolatedModules": true,
+
+    // 跳过 node_modules 里 .d.ts 文件的类型检查。
+    // 可以明显提升大型项目类型检查速度。
+    "skipLibCheck": true,
+
+    // 引入全局类型。
+    "types": []
+  },
+
+  // 指定哪些目录参与 TypeScript 类型检查。
+  "include": ["src", "tests"]
+}
